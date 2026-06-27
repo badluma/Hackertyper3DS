@@ -1,0 +1,13 @@
+CompileFlags:
+  Compiler: /opt/devkitpro/devkitARM/bin/arm-none-eabi-gcc
+  Add:
+    - -march=armv6k
+    - -mtune=mpcore
+    - -mfloat-abi=hard
+    - -mtp=soft
+    - -D__3DS__
+    - -I/opt/devkitpro/libctru/include
+    - -I/opt/devkitpro/devkitARM/arm-none-eabi/include
+    - -I/opt/devkitpro/devkitARM/lib/gcc/arm-none-eabi/15.1.0/include
+  Remove:
+    - -mword-relocations
