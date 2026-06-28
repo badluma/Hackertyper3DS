@@ -3,18 +3,34 @@ on:
   push:
     tags:
       - v*
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-latest
     container: devkitpro/devkitarm:latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
+
+      - name: Install bannertool
+        run: |
+          curl -fsSL https://github.com/Steveice10/bannertool/releases/latest/download/bannertool-linux-x86_64.zip -o bannertool.zip
+          unzip bannertool.zip bannertool
+          mv bannertool /usr/local/bin/bannertool
+          chmod +x /usr/local/bin/bannertool
+
+      - name: Install makerom
+        run: |
+          curl -fsSL https://github.com/3DSGuy/Project_CTR/releases/latest/download/makerom-linux_x86_64.zip -o makerom.zip
+          unzip makerom.zip makerom
+          mv makerom /usr/local/bin/makerom
+          chmod +x /usr/local/bin/makerom
 
       - name: Clean potential build artifacts
         run: make clean
@@ -27,6 +43,25 @@ jobs:
           shopt -s failglob
           ls *.3dsx *.cia
         working-directory: build/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            build/*.3dsx
+            build/*.cia
+
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: build/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
