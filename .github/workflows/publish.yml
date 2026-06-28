@@ -39,6 +39,7 @@ jobs:
         run: make cia
 
       - name: Check build
+        shell: bash
         run: |
           shopt -s failglob
           ls *.3dsx *.cia
