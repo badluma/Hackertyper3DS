@@ -18,19 +18,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install bannertool
+      - name: Build and install bannertool
         run: |
-          curl -fsSL https://github.com/carstene1ns/3ds-bannertool/releases/download/1.2.3/bannertool-1.2.3-linux.tar.gz -o bannertool.tar.gz
-          tar -xzf bannertool.tar.gz --strip-components=1
-          mv bannertool /usr/local/bin/bannertool
-          chmod +x /usr/local/bin/bannertool
+          git clone --depth 1 --branch 1.2.3 https://github.com/carstene1ns/3ds-bannertool.git
+          cmake -S 3ds-bannertool -B bannertool-build -DCMAKE_BUILD_TYPE=Release
+          cmake --build bannertool-build -j$(nproc)
+          mv bannertool-build/bannertool /usr/local/bin/bannertool
 
-      - name: Install makerom
+      - name: Build and install makerom
         run: |
-          curl -fsSL https://github.com/3DSGuy/Project_CTR/releases/download/makerom-v0.19.0/makerom-v0.19.0-ubuntu_x86_64.zip -o makerom.zip
-          unzip makerom.zip makerom
-          mv makerom /usr/local/bin/makerom
-          chmod +x /usr/local/bin/makerom
+          git clone --depth 1 --branch makerom-v0.19.0 https://github.com/3DSGuy/Project_CTR.git
+          make -C Project_CTR/makerom deps
+          make -C Project_CTR/makerom
+          mv Project_CTR/makerom/bin/makerom /usr/local/bin/makerom
 
       - name: Clean potential build artifacts
         run: make clean
