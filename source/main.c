@@ -5,7 +5,7 @@
 #include <dirent.h>
 #include <unistd.h>
 
-// the colors
+// colors
 char *colors[] = {
     "\x1b[32m", // Green
     "\x1b[31m", // Red
@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
         mkdir("sdmc:/3ds/Hackertyper3DS", 0777);
     }
 
-    // check if config file exists
+    // check if text file exists
     if (access("sdmc:/3ds/Hackertyper3DS/text.txt", F_OK) != 0) {
         FILE *fptr = fopen("sdmc:/3ds/Hackertyper3DS/text.txt", "w");
         if (fptr) {
@@ -49,32 +49,42 @@ int main(int argc, char **argv) {
     gfxInitDefault();
     consoleInit(GFX_TOP, NULL);
 
+    printf("Hackertyper3DS (SEL:color L+U/D:speed)\n\n");
+
     while (aptMainLoop()) {
         hidScanInput(); // scans for key pressings
-        u32 kDown = hidKeysDown();
+        u32 kDown = hidKeysDown(); // gets keys that are down
+        u32 kHeld = hidKeysHeld(); // gets keys that are held
 
         // key input handling
-        if (kDown & KEY_L) {
-            if (kDown & KEY_DUP) {
-                speed = (speed + 1) % 20; // prevents speed from going above 19
+        if (kHeld & KEY_L) { // checks if L is held
+            if (kDown & KEY_DUP) { // checks if d pad up is pressed
+                if (speed < 49) speed += 1; // increase speed
             }
-            if (kDown & KEY_DDOWN) {
-                speed = (speed - 1 + 20) % 20; // prevents speed from going below 0
+            if (kDown & KEY_DDOWN) { // checks if d pad down is pressed
+                if (speed > 1) speed -= 1; // decrease speed
             }
-        } else if (kDown & KEY_START) {
+        } else if (kDown & KEY_START) { // checks if start is pressed
             break; // quit app
-        } else if (kDown & KEY_SELECT) {
-            currentColor = (currentColor + 1) % 16; // prevents the current color from going over 15
-            color = colors[currentColor];
-        } else {
-            printf("%s", color); // prints color
-            for (int i = 0; i < (int)speed; i++) {
-                if (!text[currentChar]) currentChar = 0; // loop
+        } else if (kDown & KEY_SELECT) { // checks if select is pressed
+            currentColor = (currentColor + 1) % 7; // prevents the current color from going over 6
+            color = colors[currentColor]; // set color
+            printf("\x1b[2J"); // clear screen
+            printf("%s", color); // print color
+            currentChar = 0; // reset current char to start of file
+            printf("Hackertyper3DS (SEL:color L+U/D:speed)\n\n");
+        } else if (kDown) {
+            for (int i = 0; i < (int)speed; i++) { // repeats for speed amount of times
+                if (!text[currentChar]) currentChar = 0; // checks if file already reached end and loops back
                 printf("%c", text[currentChar]); // prints char
+                if (text[currentChar] == ' ') {
+                    i--; // skips over space
+                }
                 currentChar++; // counts up current char
             }
         }
 
+        // graphics stuff
         gfxFlushBuffers();
         gfxSwapBuffers();
         gspWaitForVBlank();
